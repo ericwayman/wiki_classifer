@@ -28,7 +28,6 @@ class CategoryScraper(WikiScraper):
         for child in children:
             if 'href' in child.attrs:
                 page_links.append(child.get('href'))
-        #self.page_links = page_links
         #don't count FAQ link and next page link
         self.page_links = [x for x in page_links if (":FAQ" not in x) and ("Category:" not in x)]
         #before return pages can check the last link pull those links if there's another page
@@ -49,7 +48,6 @@ class TextScraper(WikiScraper):
         text = self._clean_text(text)
         return text
 
-#write a class to make the data frame
 class CategoryData:
 
     def __init__(self,categories,base_url,directory):
@@ -77,15 +75,7 @@ class CategoryData:
 
 
 if __name__ == "__main__":
-    # url = "https://en.wikipedia.org/wiki/Category:Rare_diseases"
-    # cat_scraper = CategoryScraper(url)
-    # print cat_scraper.find_page_links()
-    # print '\nTesting text scraper'
-    # base_url = 'https://en.wikipedia.org'
-    # text_url = base_url+cat_scraper.page_links[1]
-    # #print text_url
-    # text_scraper = TextScraper(text_url)
-    # print text_scraper.extract_text()
+    #modify to take custom categories
     categories = ["Rare diseases",
                     "Infectious diseases",
                     "Cancer",
