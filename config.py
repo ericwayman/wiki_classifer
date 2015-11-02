@@ -1,4 +1,6 @@
 ###models to import
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
 
@@ -15,12 +17,17 @@ class Config:
 
 ############
 #models
+ada_boost_clf=AdaBoostClassifier(
+    n_estimators=20
+    )
 bayes_clf = MultinomialNB()
+logistic_clf = LogisticRegression()
 random_forest_clf=RandomForestClassifier(
     n_estimators = 100,
     #max_depth = 5,
     min_samples_leaf =2
     )
+
 
 category_list=["Rare diseases",
                 "Infectious diseases",
@@ -32,7 +39,9 @@ category_list=["Rare diseases",
                 ]
 
 model_dict = {
+            "ada_boost_clf":ada_boost_clf,
             "bayes_clf":bayes_clf,
+            "logistic_clf":logistic_clf,
             "random_forest_clf":random_forest_clf
             }
 
