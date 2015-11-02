@@ -48,7 +48,8 @@ model_dict = {
 path_dict={
     "model_file":"models.p",
     "full_data":'full_data.csv',
-    "tfidf_vectorizer":"tfidf.p"
+    "tfidf_vectorizer":"tfidf.p",
+    "prediction_data":"prediction_data.csv"
 }
 
 config = Config(

@@ -10,13 +10,13 @@ from sklearn import metrics
 
 ####helper functions
 #Doesn't seem to improve accuracy.  Also need to fix encoding for predict_categories.py.  
-# def stem_text(text):
+# def stem_text(text,word_limit):
 #     '''
 #     Takes a string text and returns text with all the words tokenized
 #     '''
 #     stemmer = SnowballStemmer("english")
 #     #text = text.encode('utf-8')
-#     word_list = text.split(" ")
+#     word_list = text.split(" ")[:word_limit]
 #     return " ".join([stemmer.stem(w) for w in word_list])
 
 
@@ -33,7 +33,7 @@ def preprocess_data_frame(df):
 
     return df
 
-def text_transforms(text,word_limit=500):
+def text_transforms(text,word_limit=3000):
     #text = stem_text(text)[:word_limit]
     text = text[:word_limit]
     return text
@@ -109,7 +109,7 @@ def score_ensemble(categories,labels,prob_dict):
     pred_indices = np.apply_along_axis(np.argmax,axis=1,arr=probs)
     preds = [categories[i] for i in pred_indices]
     score = metrics.accuracy_score(y_true=labels,y_pred =preds)
-    return score
+    return score, preds
 
 if __name__ == "__main__":
     #local imports. Import config object
@@ -118,6 +118,7 @@ if __name__ == "__main__":
     model_file=path_dict["model_file"]
     tfidf_file=path_dict["tfidf_vectorizer"]
     full_data=path_dict["full_data"]
+    prediction_data=path_dict["prediction_data"]
     model_dict = config.model_dict
 
     #load data
@@ -144,13 +145,15 @@ if __name__ == "__main__":
         full_probs[name].extend(pred_probs)
     #get class names after we've trained the models
     categories = model_dict[first_mod].classes_
-    ensemble_accuracy = score_ensemble(
+    ensemble_accuracy,ensemble_preds = score_ensemble(
         categories=categories,
         labels=full_labels,
         prob_dict=full_probs
     )
     print "Average accuracy of the ensemble: {}".format(ensemble_accuracy)
-
+    #save labels and predictions to csv
+    prediction_frame=pd.DataFrame(data={"labels":full_labels,"predictions":ensemble_preds})
+    prediction_frame.to_csv(prediction_data,index=False)
     #initialize tfidf_vectorizer, fit it to the full data and save
     tfidf = initialize_tfidf()
     X=tfidf.fit_transform(X).toarray()
@@ -161,6 +164,7 @@ if __name__ == "__main__":
     for name,model in model_dict.iteritems():
         model.fit(X,y)
     
+
     #pickle model dict
     save_models(model_list=model_dict,model_file=model_file)
 

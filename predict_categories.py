@@ -22,9 +22,7 @@ def ensemble_predictions(pred_array,categories):
     '''
     ensemble_preds = np.mean(pred_array,axis=0)
     print ensemble_preds
-    print sum(ensemble_preds)
     max_prob = max(ensemble_preds)
-    print max_prob
     predicted_label=categories[np.argmax(ensemble_preds)]
     return predicted_label, max_prob
 
