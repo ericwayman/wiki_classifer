@@ -1,7 +1,7 @@
-import urllib2 
 from bs4 import BeautifulSoup
-import pandas as pd
 from os import path
+import pandas as pd
+import urllib2 
 #add def strings
 class WikiScraper:
 
@@ -65,26 +65,21 @@ class CategoryData:
                 text_scraper = TextScraper('https://en.wikipedia.org'+link)
                 text = text_scraper.extract_text()
                 data.append((cat,text))
-            print "added {} linkes of Data for category: {}".format(len(links),cat)
+            print "added {} links of Data for category: {}".format(len(links),cat)
         df = pd.DataFrame.from_records(data=data, columns = ["category","text"])
         print "saving file"
-        out_file = path.join(self.directory,'full_data.csv')
+        out_file = self.directory
         #use utf8 to avoid error letter when stemming
         df.to_csv(out_file,index=False,encoding = 'utf8')
 
-
-
 if __name__ == "__main__":
-    #modify to take custom categories
-    categories = ["Rare diseases",
-                    "Infectious diseases",
-                    "Cancer",
-                    "Congenital disorders",
-                    "Organs (anatomy)",
-                    "Machine learning algorithms",
-                    "Medical devices"
-                ]
+    #local imports. Import config object
+    from config import config
+    categories = config.category_list
+    path_dict=config.path_dict
+    full_data=path_dict["full_data"]
+
     base_url ="https://en.wikipedia.org/wiki/Category:"
-    data_object= CategoryData(categories=categories,base_url=base_url,directory="./")
+    data_object= CategoryData(categories=categories,base_url=base_url,directory=full_data)
     #print data_object.categories
     data_object.save_data_to_csv()

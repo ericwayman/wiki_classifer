@@ -15,9 +15,14 @@ def raw_data_to_feature_vector(text,tfidf):
 
 
 if __name__ == "__main__":
+    #local imports. Import config object
+    from config import config
     #load models trained on full data and fit tfidf_vectorizer
-    models = pickle.load(open("models.p","rb"))
-    tfidf = pickle.load(open("tfidf.p","rb"))
+    path_dict=config.path_dict
+    tfidf_file=path_dict["tfidf_vectorizer"]
+    model_file=path_dict["model_file"]
+    model_dict = pickle.load(open(model_file,"rb"))
+    tfidf = pickle.load(open(tfidf_file,"rb"))
     base_url = "https://en.wikipedia.org/wiki/"
     while True:
         link = raw_input(
@@ -36,6 +41,9 @@ if __name__ == "__main__":
             text = text_scraper.extract_text()
             x=raw_data_to_feature_vector(text=text,tfidf=tfidf)
             #consider zipping models as dict to get names as well
-            for model in models:
+            for name,model in model_dict.iteritems():
                 pred_probs= model.predict_proba(x)
-                print pred_probs
+                classes = model.classes_
+                print "Predicted probabilities for {} model:".format(name)
+                for pair in zip(classes,pred_probs[0]):
+                    print "\t {0}: {1:.2f}".format(pair[0],pair[1])

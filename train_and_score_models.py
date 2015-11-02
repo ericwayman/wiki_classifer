@@ -5,13 +5,10 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cross_validation import StratifiedKFold
 from sklearn import metrics
-###models to import
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.ensemble import RandomForestClassifier
 
 
 ####helper functions
-#need to fix encoding
+#Doesn't seem to improve accuracy.  Also need to fix encoding for predict_categories.py.  
 # def stem_text(text):
 #     '''
 #     Takes a string text and returns text with all the words tokenized
@@ -93,57 +90,49 @@ def score_kfold_cv(model,X,y,num_folds):
 
     return full_preds, full_pred_probs, full_scores
 
-
-def initialize_models():
-    '''
-    Returns list of new models initialized 
-    '''
-    bayes_clf = MultinomialNB()
-    random_forest_clf=RandomForestClassifier(
-        n_estimators = 100,
-        #max_depth = 5,
-        min_samples_leaf =2
-        )
-
-    models = [bayes_clf,random_forest_clf]
-
-    return models
-
 def save_models(model_list,model_file="models.p"):
     pickle.dump(model_list, open(model_file, "wb" ) )
 
 
-def compute_metrics():
-    return
+# def compute_metrics():
+#     return
 
 if __name__ == "__main__":
+    #local imports. Import config object
+    from config import config
+    path_dict=config.path_dict
+    model_file=path_dict["model_file"]
+    tfidf_file=path_dict["tfidf_vectorizer"]
+    full_data=path_dict["full_data"]
+    model_dict = config.model_dict
+
     #load data
-    df = pd.read_csv('full_data.csv',encoding = 'utf8')
+    df = pd.read_csv(full_data,encoding = 'utf8')
     df = preprocess_data_frame(df)
     X = df['text']
     y = df['category']
-    models = initialize_models()
+    
     #compute accuracy with cross validation
-    for model in models:
+    for name,model in model_dict.iteritems():
         preds, pred_probs, scores=score_kfold_cv(
             model=model,
             X=X,
             y=y,
             num_folds=10)
-        print scores
-        print np.mean(scores)
+        print "Mean accuracy for cross validation for {0}: {1}".format(name,np.mean(scores))
     
-    #Fit models to full data and save
     #initialize tfidf_vectorizer, fit it to the full data and save
     tfidf = initialize_tfidf()
     X=tfidf.fit_transform(X).toarray()
-    pickle.dump(tfidf, open('tfidf.p', "wb" ) )
-    #train models on full data
-    models = initialize_models()
-    for model in models:
+    pickle.dump(tfidf, open(tfidf_file, "wb" ) )
+    
+    #Fit models to full data and save    model_dict = config.model_dict
+    model_dict = config.model_dict
+    for name,model in model_dict.iteritems():
         model.fit(X,y)
-    #pick model list
-    save_models(model_list=models,model_file="models.p")
+    
+    #pick model dict
+    save_models(model_list=model_dict,model_file=model_file)
 
 
 
