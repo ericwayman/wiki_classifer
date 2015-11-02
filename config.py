@@ -40,7 +40,7 @@ category_list=["Rare diseases",
 
 model_dict = {
             "ada_boost_clf":ada_boost_clf,
-            "bayes_clf":bayes_clf,
+            #"bayes_clf":bayes_clf,
             "logistic_clf":logistic_clf,
             "random_forest_clf":random_forest_clf
             }

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import cPickle as pickle
 from nltk.stem import SnowballStemmer
 import numpy as np
@@ -70,6 +71,7 @@ def score_kfold_cv(model,X,y,num_folds):
     full_preds=[]
     full_pred_probs=[]
     full_scores=[]
+    full_labels=[]
 
     cv_folds = StratifiedKFold(y=y,n_folds=num_folds,shuffle=True,random_state=1)
     #train on k-1 fold and test on each remaining fold
@@ -84,18 +86,30 @@ def score_kfold_cv(model,X,y,num_folds):
         score = metrics.accuracy_score(y_true=y_test,y_pred =preds)
         #score = np.mean([preds == y_test])
 
+        full_labels.extend(y_test)
         full_preds.extend(preds)
         full_pred_probs.extend(pred_probs)
         full_scores.append(score)
-
-    return full_preds, full_pred_probs, full_scores
+        
+    return full_labels, full_preds, full_pred_probs, full_scores
 
 def save_models(model_list,model_file="models.p"):
     pickle.dump(model_list, open(model_file, "wb" ) )
 
 
-# def compute_metrics():
-#     return
+def score_ensemble(categories,labels,prob_dict):
+    '''
+    inputs: labels-- a list of the correct predictions
+    prob_dict- a dict with keys being model_names and values the array of the
+    predicted probabilites for each of their predictions
+    output:
+    score-- the accuracy for the ensemble found by taking the arg max of the average probabilities
+    '''
+    probs=np.array([prob_dict[model] for model in prob_dict.keys()]).mean(axis=0)
+    pred_indices = np.apply_along_axis(np.argmax,axis=1,arr=probs)
+    preds = [categories[i] for i in pred_indices]
+    score = metrics.accuracy_score(y_true=labels,y_pred =preds)
+    return score
 
 if __name__ == "__main__":
     #local imports. Import config object
@@ -113,14 +127,30 @@ if __name__ == "__main__":
     y = df['category']
     
     #compute accuracy with cross validation
+    full_labels = []
+    full_probs = defaultdict(list)
+    first_mod = model_dict.keys()[0]
+    print "Mean accuracy across CV folds for each model:"
     for name,model in model_dict.iteritems():
-        preds, pred_probs, scores=score_kfold_cv(
+        labels,preds, pred_probs, scores=score_kfold_cv(
             model=model,
             X=X,
             y=y,
             num_folds=10)
-        print "Mean accuracy for cross validation for {0}: {1}".format(name,np.mean(scores))
-    
+        print "\t {0}: {1}".format(name,np.mean(scores))
+        if name == first_mod:
+            #extract one copy of the labels
+            full_labels.extend(labels)
+        full_probs[name].extend(pred_probs)
+    #get class names after we've trained the models
+    categories = model_dict[first_mod].classes_
+    ensemble_accuracy = score_ensemble(
+        categories=categories,
+        labels=full_labels,
+        prob_dict=full_probs
+    )
+    print "Average accuracy of the ensemble: {}".format(ensemble_accuracy)
+
     #initialize tfidf_vectorizer, fit it to the full data and save
     tfidf = initialize_tfidf()
     X=tfidf.fit_transform(X).toarray()
@@ -131,7 +161,7 @@ if __name__ == "__main__":
     for name,model in model_dict.iteritems():
         model.fit(X,y)
     
-    #pick model dict
+    #pickle model dict
     save_models(model_list=model_dict,model_file=model_file)
 
 
